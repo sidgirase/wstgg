@@ -1,0 +1,69 @@
+{
+  "run_config": {
+    "is_smoke_run": true,
+    "task": "infovqa",
+    "seed": 42,
+    "rank": 16,
+    "match_info": {
+      "model_name": "internvl3_2b",
+      "lm_rank": 16,
+      "vision_rank": 21,
+      "lm_trainable_params": 278528,
+      "vision_trainable_params": 279552,
+      "relative_difference": 0.0037,
+      "percentage_difference": 0.37,
+      "matched_within_tolerance": true,
+      "tolerance": 0.1,
+      "c_lm_factor": 17408,
+      "c_vision_factor": 13312,
+      "num_lm_layers": 28,
+      "num_vision_layers": 18,
+      "message": "Successfully matched budget within 0.37% (<= 10.0%): LM rank 16 (278,528 params) vs Vision rank 21 (279,552 params)."
+    },
+    "placement": "lm",
+    "model_name": "internvl3_2b",
+    "max_steps": 10,
+    "learning_rate": 0.0002,
+    "device": "cpu",
+    "trainable_param_stats": {
+      "total_params": 5402088,
+      "trainable_params": 278528,
+      "vision_trainable_params": 0,
+      "lm_trainable_params": 278528,
+      "trainable_percent": 5.155932298770401
+    }
+  },
+  "telemetry_summary": {
+    "total_steps": 10,
+    "avg_step_time_ms": 10.63,
+    "max_step_time_ms": 23.11,
+    "peak_memory_mb": 458.34,
+    "peak_memory_gb": 0.448,
+    "final_loss": 6.9777,
+    "min_loss": 6.8177
+  },
+  "losses": [
+    6.91941,
+    6.88885,
+    6.87376,
+    6.89773,
+    6.92511,
+    6.9121,
+    6.91623,
+    6.88032,
+    6.81765,
+    6.97768
+  ],
+  "step_times_ms": [
+    23.11,
+    8.11,
+    8.38,
+    7.38,
+    9.4,
+    8.07,
+    9.17,
+    9.2,
+    14.19,
+    9.25
+  ]
+}
