@@ -109,6 +109,40 @@ class ManifestManager:
                 return r
         return None
 
+    def sync_from_disk(self, runs_dir: str = "./runs") -> None:
+        """
+        Scans runs_dir for completed run_metrics.json files and synchronizes
+        the manifest state. This ensures robust progress tracking across
+        parallel SLURM jobs without race condition clobbering.
+        """
+        if not os.path.exists(runs_dir):
+            return
+        if os.path.exists(self.manifest_path):
+            try:
+                self.load()
+            except Exception:
+                pass
+
+        updated = False
+        for r in self.runs:
+            run_id = r["run_id"]
+            metrics_file = os.path.join(runs_dir, run_id, "run_metrics.json")
+            if os.path.exists(metrics_file):
+                try:
+                    with open(metrics_file, "r") as f:
+                        data = json.load(f)
+                    peak_vram = data.get("telemetry_summary", {}).get("peak_memory_gb", None)
+                    if r["status"] != "completed" or r.get("peak_vram_gb") != peak_vram:
+                        r["status"] = "completed"
+                        if peak_vram is not None:
+                            r["peak_vram_gb"] = peak_vram
+                        updated = True
+                except Exception:
+                    pass
+
+        if updated:
+            self.save()
+
     def update_status(
         self,
         run_id: str,
@@ -117,6 +151,11 @@ class ManifestManager:
         error_message: Optional[str] = None,
         completed_at: Optional[str] = None,
     ) -> None:
+        if os.path.exists(self.manifest_path):
+            try:
+                self.load()
+            except Exception:
+                pass
         run = self.get_run(run_id)
         if run:
             run["status"] = status
@@ -152,6 +191,7 @@ class ManifestManager:
 
     def render_markdown_summary(self) -> str:
         """Returns a Markdown table of experiment progress for reports and syncs."""
+        self.sync_from_disk()
         total = len(self.runs)
         completed = sum(1 for r in self.runs if r["status"] == "completed")
         running = sum(1 for r in self.runs if r["status"] == "running")
