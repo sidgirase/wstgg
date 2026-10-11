@@ -94,6 +94,13 @@ class VLMTrainer:
 
         # Precision scaler
         self.use_amp = self.device.type == "cuda" and mixed_precision in ["fp16", "bf16"]
+        if self.mixed_precision == "bf16":
+            self.amp_dtype = torch.bfloat16
+        elif self.mixed_precision == "fp16":
+            self.amp_dtype = torch.float16
+        else:
+            self.amp_dtype = torch.float32
+
         if hasattr(torch, "amp") and hasattr(torch.amp, "GradScaler"):
             self.scaler = torch.amp.GradScaler("cuda", enabled=(self.mixed_precision == "fp16"))
         else:

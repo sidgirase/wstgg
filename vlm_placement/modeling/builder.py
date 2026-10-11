@@ -178,7 +178,7 @@ def load_vlm_model(
 
     # Try loading HuggingFace model
     try:
-        from transformers import AutoModelForVision2Seq, AutoModel
+        from transformers import AutoModel, AutoModelForCausalLM
         hf_id = spec["hf_model_id"]
         print(f"[ModelLoader] Loading pretrained {hf_id} from Hugging Face...")
         model = AutoModel.from_pretrained(
