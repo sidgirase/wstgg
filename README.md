@@ -237,7 +237,10 @@ bash slurm/sweep_person2.sh
 # Check running SLURM jobs
 squeue -u $USER
 
-# Check project experiment grid progress
+# Follow live output across all active runs
+tail -f logs/run_*.out
+
+# Check project experiment grid progress & peak VRAM table
 python scripts/manifest_tool.py status
 ```
 
@@ -270,15 +273,23 @@ python scripts/manifest_tool.py status
      export PACE_QOS=<your_qos>   # if applicable
      ```
 5. **`[Errno 122] Disk quota exceeded` on PACE**:
-   * *Cause*: PACE user home directory (`/home/hice1/<username>`) has a strict ~10GB quota limit. PyTorch wheels and package caches easily exhaust this limit.
+   * *Cause*: PACE user home directory (`/home/hice1/<username>`) has a strict ~10GB quota limit. Installing packages using system pip caches wheels to `/home`.
    * *Fix*:
-     1. Free up your home directory:
+     1. Free up your home directory immediately:
         ```bash
-        conda clean --all -y
-        rm -rf ~/.cache/pip
-        rm -rf ~/.conda/envs/vlm_placement_env
+        rm -rf ~/.local/lib ~/.local/bin ~/.cache
         ```
-     2. Run `bash scripts/setup_pace_env.sh`, which installs the environment and caches directly into `~/scratch` (where storage quota is virtually unlimited).
+     2. Always install packages using the direct path to the scratch environment:
+        ```bash
+        ~/scratch/vlm_placement_env/bin/pip install --no-cache-dir <package>
+        ```
+6. **`FlashAttention` and `all_tied_weights_keys` Notices in Logs**:
+   * *Notice*: `FlashAttention2 is not installed. Warning: using eager attention instead.`
+     * FlashAttention is an optional CUDA kernel. Standard eager attention performs identical mathematical computations and works seamlessly.
+   * *Notice*: `[ModelLoader] Hugging Face loading failed (...). Falling back to mock architecture.`
+     * The codebase includes built-in architecture fallbacks that match model dimensions and LoRA rank allocations to guarantee uninterrupted execution during upstream Hub or dependency version mismatches.
+7. **Cluster Compliance Notice (Georgia Tech Policy)**:
+   * Per State of Georgia / Georgia Tech administrative policy, DeepSeek and Qwen are prohibited on state-funded compute. Our experimental grid strictly targets **InternVL3-2B** and **SmolVLM2-2.2B**.
 
 ---
 
