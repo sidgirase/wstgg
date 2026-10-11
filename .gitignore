@@ -28,16 +28,22 @@ ENV/
 
 # PyTorch & HuggingFace Checkpoints & Data
 checkpoints/
-runs/
-logs/
-/data/
 data_cache/
+/data/
 !vlm_placement/data/
 *.pt
 *.bin
 *.safetensors
 *.pth
 wandb/
+
+# Checkpoint model weights inside runs are ignored; manifest and metrics are tracked
+runs/**/*.pt
+runs/**/*.bin
+runs/**/*.safetensors
+runs/**/*.pth
+runs/**/checkpoint*
+runs/**/checkpoints/
 
 # IDE & OS
 .vscode/
@@ -46,7 +52,6 @@ wandb/
 Thumbs.db
 
 # PACE SLURM outputs
+logs/
 slurm-*.out
 slurm-*.err
-logs/*.out
-logs/*.err
