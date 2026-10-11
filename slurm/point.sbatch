@@ -41,7 +41,7 @@ echo "===================================================================="
 
 echo "Loading PACE Modules..."
 module load anaconda3/2023.03
-module load cuda/11.8
+module load cuda/12.1 2>/dev/null || module load cuda/11.8
 
 echo "Activating Conda Environment..."
 if [ -d "$HOME/scratch/vlm_placement_env" ]; then

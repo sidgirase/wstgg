@@ -10,7 +10,8 @@ echo "===================================================================="
 echo " 1. Loading PACE Modules (Anaconda & CUDA 11.8)..."
 echo "===================================================================="
 module load anaconda3/2023.03
-module load cuda/11.8
+module load cuda/12.1 2>/dev/null || module load cuda/11.8
+
 
 # PACE /home has a strict ~10GB quota. All large environments and caches MUST live in ~/scratch
 SCRATCH_DIR="$HOME/scratch"
@@ -38,10 +39,10 @@ source activate "$ENV_DIR" || conda activate "$ENV_DIR"
 
 echo ""
 echo "===================================================================="
-echo " 4. Installing PyTorch with CUDA 11.8 Support (direct to scratch)..."
+echo " 4. Installing PyTorch with CUDA 12.1 Support (direct to scratch)..."
 echo "===================================================================="
 pip install --no-cache-dir --upgrade pip
-pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu118
+pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu121
 
 echo ""
 echo "===================================================================="
