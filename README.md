@@ -18,7 +18,7 @@ Our project investigates whether an inference-only **oracle-text rescue diagnost
 To guarantee strict independence from concurrent distillation research:
 * **Excluded Benchmarks**: Under no circumstances do we train on or evaluate on **ChartQA** or **Geometry3K**.
 * **Target Benchmarks**: **InfographicVQA**, **TabMWP**, and **AI2D** (with **DocVQA** held out for out-of-distribution evaluation).
-* **Target Models**: **InternVL3-2B** (`OpenGVLab/InternVL2_5-2B` / `InternVL3-2B`), **SmolVLM2-2.2B** (`HuggingFaceTB/SmolVLM2-2.2B-Instruct`), and **Qwen3-VL-2B** (`Qwen/Qwen2-VL-2B-Instruct`).
+* **Target Models**: **InternVL3-2B** (`OpenGVLab/InternVL2_5-2B`) and **SmolVLM2-2.2B** (`HuggingFaceTB/SmolVLM2-2.2B-Instruct`).
 * **Supervision**: Standard answer-only SFT; **no teacher models**, no distilled supervision.
 
 ---
@@ -33,7 +33,7 @@ To allow 2 teammates to collaborate efficiently without stepping on each other's
 |---|---|---|---|---|---|
 | **Team Member 1** | **InternVL3-2B** | InfographicVQA, TabMWP, AI2D | 42, 43, 44 | `lm`, `vision` | **18 runs** |
 | **Team Member 2** | **SmolVLM2-2.2B** | InfographicVQA, TabMWP, AI2D | 42, 43, 44 | `lm`, `vision` | **18 runs** |
-| **Shared / Expansion** | **Qwen3-VL-2B** | InfographicVQA, TabMWP, AI2D | 42, 43, 44 | `lm`, `vision` | As compute permits |
+| **Total Grid** | **2 Model Families** | **3 Benchmark Tasks** | **3 Seeds** | **2 Placements** | **36 runs** |
 
 ### Collaboration Protocol
 1. **Isolated Output Paths**: Each run has a deterministic output folder: `./runs/run_<index>_<model>_<task>_<placement>_s<seed>/`.
