@@ -1,4 +1,4 @@
-# Where Should the Gradient Go?
+# wstgg (Where Should the Gradient Go?)
 ### Aligning LoRA Placement with Pre-Training Perception/Reasoning Profiles in Small VLMs
 
 **CS 8803-VLM Fall 2026 · Final Project**  
@@ -31,27 +31,31 @@ To allow 2 teammates to collaborate efficiently without stepping on each other's
 
 | Teammate | Primary Model Ownership | Benchmark Tasks | Seeds | Placements | Total Runs |
 |---|---|---|---|---|---|
-| **Person 1** (e.g., Siddhesh) | **InternVL3-2B** | InfographicVQA, TabMWP, AI2D | 42, 43, 44 | `lm`, `vision` | **18 runs** |
-| **Person 2** (Collaborator) | **SmolVLM2-2.2B** | InfographicVQA, TabMWP, AI2D | 42, 43, 44 | `lm`, `vision` | **18 runs** |
+| **Team Member 1** | **InternVL3-2B** | InfographicVQA, TabMWP, AI2D | 42, 43, 44 | `lm`, `vision` | **18 runs** |
+| **Team Member 2** | **SmolVLM2-2.2B** | InfographicVQA, TabMWP, AI2D | 42, 43, 44 | `lm`, `vision` | **18 runs** |
 | **Shared / Expansion** | **Qwen3-VL-2B** | InfographicVQA, TabMWP, AI2D | 42, 43, 44 | `lm`, `vision` | As compute permits |
 
 ### Collaboration Protocol
 1. **Isolated Output Paths**: Each run has a deterministic output folder: `./runs/run_<index>_<model>_<task>_<placement>_s<seed>/`.
-2. **Shared State Manifest**: All runs are tracked in `runs/manifest.json`. You can check progress or list pending runs anytime via `python scripts/manifest_tool.py status`.
-3. **Cross-Training Assistance**: If Person 2 finishes their runs early or Person 1 needs assistance running remaining seeds on PACE, either teammate can run:
+2. **Shared State Manifest**: All runs are tracked in `runs/manifest.json`. You can check progress or list pending runs anytime via:
    ```bash
-   # Filter and submit only pending runs assigned to a specific person or model:
+   python scripts/manifest_tool.py status
+   ```
+   *(Note: `manifest_tool.py` is pure Python and has zero external dependencies, so it runs directly on login nodes without requiring PyTorch).*
+3. **Cross-Training Assistance**: If Team Member 2 finishes their runs early or Team Member 1 needs assistance running remaining seeds on PACE, either teammate can run:
+   ```bash
+   # Filter and submit only pending runs assigned to a specific teammate or model:
    bash slurm/sweep.sh "Person_1" "internvl3_2b"
    bash slurm/sweep.sh "Person_2" "smolvlm2_2b"
    ```
-4. **Resumable Execution**: If a PACE job hits the walltime or fails, re-running the sweep script will automatically resume from the latest checkpoint without re-running completed seeds.
+4. **Resumable Execution**: If a PACE job hits walltime or fails, re-running the sweep script will automatically resume from the latest checkpoint without re-running completed seeds.
 
 ---
 
 ## 3. Repository Structure
 
 ```
-final_project/
+wstgg/
 ├── .gitignore                      # Git ignore patterns (ignores checkpoints, runs, data)
 ├── README.md                       # Comprehensive project & navigation guide
 ├── requirements.txt                # Python dependencies
@@ -77,15 +81,16 @@ final_project/
 │   └── utils/
 │       └── manifest.py             # 36-run grid generator and progress tracker
 ├── scripts/                        # Standalone utility scripts
+│   ├── setup_pace_env.sh           # One-click environment installer for PACE-ICE
 │   ├── run_smoke.py                # 100-sample smoke test (Week 6 milestone)
 │   ├── run_train.py                # Direct training launcher
 │   ├── match_ranks.py              # Rank matching solver tool
-│   └── manifest_tool.py            # Manifest query & status tool
+│   └── manifest_tool.py            # Manifest query & status tool (zero dependencies)
 ├── slurm/                          # Georgia Tech PACE-ICE SLURM submission scripts
 │   ├── point.sbatch                # Single run SLURM job
 │   ├── sweep.sh                    # Master resumable sweep runner
-│   ├── sweep_person1.sh            # Dedicated sweep for Person 1 (InternVL3-2B)
-│   ├── sweep_person2.sh            # Dedicated sweep for Person 2 (SmolVLM2-2.2B)
+│   ├── sweep_person1.sh            # Dedicated sweep for Team Member 1 (InternVL3-2B)
+│   ├── sweep_person2.sh            # Dedicated sweep for Team Member 2 (SmolVLM2-2.2B)
 │   └── profile_vram.sbatch         # VRAM and step latency profiling job
 └── tests/                          # Automated unit test suite
     ├── test_modeling.py            # Invariant tests and rank-matching tests
@@ -100,7 +105,8 @@ final_project/
 ### Local Development Setup
 ```bash
 # 1. Clone repository and navigate to root
-cd final_project
+git clone https://github.com/<username>/wstgg.git
+cd wstgg
 
 # 2. Create and activate a Python virtual environment
 python -m venv .venv
@@ -110,43 +116,64 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+---
+
 ### Georgia Tech PACE-ICE Cluster Setup
-For cluster compute on PACE-ICE (following the PACE conventions from HRI):
+
+On PACE-ICE, conda solver conflicts can occur if attempting multi-channel resolutions across read-only system modules. We provide a **one-click automated setup script** that installs everything cleanly:
+
 ```bash
 # 1. SSH into PACE login node
 ssh <username>@login-ice.pace.gatech.edu
 
-# 2. Navigate to scratch directory and clone repository
+# 2. Navigate to your scratch directory and clone
 cd ~/scratch
-git clone <repo_url>
-cd final_project
+git clone https://github.com/<username>/wstgg.git
+cd wstgg
 
-# 3. Load PACE modules and create Conda environment
+# 3. Run the one-click PACE environment installer
+bash scripts/setup_pace_env.sh
+```
+
+#### Manual PACE Setup (Alternative):
+If you prefer running commands manually step-by-step:
+```bash
 module load anaconda3/2023.03
 module load cuda/11.8
 
-conda env create -f environment_pace.yml
-conda activate vlm_placement_env
+# Create environment
+conda create -y -n vlm_placement_env python=3.10
+source activate vlm_placement_env
+
+# Install PyTorch with CUDA 11.8 and requirements
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+pip install -r requirements.txt
 ```
 
 ---
 
 ## 5. Quick Start & Verification
 
-### 1. Verify Parameter Matching (10% Budget Constraint)
+### 1. Check Experiment Status (Zero-Dependency)
+On any machine or directly on the PACE login node:
+```bash
+python scripts/manifest_tool.py status
+```
+
+### 2. Verify Parameter Matching (10% Budget Constraint)
 Before training, verify that the LoRA rank matcher finds balanced trainable parameter counts within 10% for both placements:
 ```bash
 python scripts/match_ranks.py --model all --lm_rank 16 --tolerance 0.10
 ```
 *Expected Output:* Shows that for each model family, the vision rank is adjusted such that $|N_{\text{vision}} - N_{\text{lm}}| / N_{\text{lm}} \le 10\%$.
 
-### 2. Run the Week 6 Smoke Test
+### 3. Run the Week 6 Smoke Test
 Test the full pipeline end-to-end on 100 InfographicVQA samples (1 seed) for both `lm` and `vision` placements:
 ```bash
 python scripts/run_smoke.py --model internvl3_2b
 ```
 
-### 3. Run the Unit Test Suite
+### 4. Run the Unit Test Suite
 ```bash
 pytest tests/ -v
 ```
@@ -198,10 +225,10 @@ sbatch --export=ALL,MODEL=internvl3_2b,TASK=infovqa,PLACEMENT=vision,SEED=42 slu
 ### 2. Launch 2-Person Sweep Queues
 Each teammate can submit their assigned 18 runs with a single command:
 ```bash
-# Person 1 (InternVL3-2B runs):
+# Team Member 1 (InternVL3-2B runs):
 bash slurm/sweep_person1.sh
 
-# Person 2 (SmolVLM2-2.2B runs):
+# Team Member 2 (SmolVLM2-2.2B runs):
 bash slurm/sweep_person2.sh
 ```
 
@@ -216,19 +243,23 @@ python scripts/manifest_tool.py status
 
 ---
 
-## 8. PACE Troubleshooting & Best Practices
+## 8. PACE Troubleshooting Guide
 
-Based on typical PACE-ICE cluster issues:
-
-1. **CUDA Out of Memory (OOM) on Vision-Side LoRA**:
-   - Vision-side LoRA has higher activation memory under dynamic image resolutions.
-   - *Fix 1*: Gradient checkpointing is enabled by default. Ensure it is not disabled.
-   - *Fix 2*: Reduce batch size and increase gradient accumulation steps (e.g. `--batch_size 2 --gradient_accumulation_steps 8`).
-   - *Fix 3*: Use the fallback flag `--last_k_vision_blocks 4` to adapt only the connector and top visual blocks.
-2. **SLURM Account or Partition Errors**:
-   - If `#SBATCH --account=pace-ice` fails on your PACE allocation, edit `slurm/point.sbatch` and replace with your class account (e.g. `--account=gts-zkira3`).
-3. **Conda Environment Activation Failure in Batch Script**:
-   - Ensure `source activate vlm_placement_env` is preceded by `module load anaconda3/2023.03` and `module load cuda/11.8`.
+1. **`EnvironmentNameNotFound: Could not find conda environment: vlm_placement_env`**:
+   * *Cause*: Conda environment was not created yet or `conda env create` failed on solver conflicts.
+   * *Fix*: Run `bash scripts/setup_pace_env.sh`. It cleanly creates the environment and installs PyTorch CUDA wheels without solver crashes.
+2. **`ModuleNotFoundError: No module named 'torch'` on Login Node**:
+   * *Cause*: Trying to run training scripts or importing packages that load PyTorch before activating the conda environment on the login node.
+   * *Fix*:
+     * Use `python scripts/manifest_tool.py status` for monitoring (which has zero external dependencies).
+     * Activate the environment before running training commands: `source activate vlm_placement_env`.
+3. **CUDA Out of Memory (OOM) on Vision-Side LoRA**:
+   * Vision-side LoRA has higher activation memory under dynamic image resolutions.
+   * *Fix 1*: Gradient checkpointing is enabled by default. Ensure it is not disabled.
+   * *Fix 2*: Reduce batch size and increase gradient accumulation steps (e.g. `--batch_size 2 --gradient_accumulation_steps 8`).
+   * *Fix 3*: Use the fallback flag `--last_k_vision_blocks 4` to adapt only the connector and top visual blocks.
+4. **SLURM Account or Partition Errors**:
+   * If `#SBATCH --account=pace-ice` fails on your PACE allocation, edit `slurm/point.sbatch` and replace with your class account (e.g. `--account=gts-zkira3`).
 
 ---
 

@@ -1,17 +1,14 @@
 name: vlm_placement_env
 channels:
-  - pytorch
-  - nvidia
   - conda-forge
   - defaults
 dependencies:
   - python=3.10
   - pip
-  - cudatoolkit=11.8
-  - pytorch>=2.1.0
-  - torchvision>=0.16.0
-  - pytorch-cuda=11.8
   - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu118
+      - torch>=2.1.0
+      - torchvision>=0.16.0
       - transformers>=4.40.0
       - peft>=0.10.0
       - accelerate>=0.28.0

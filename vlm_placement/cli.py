@@ -12,22 +12,17 @@ import argparse
 import json
 import os
 import sys
-from typing import Dict, Any
-
-from torch.utils.data import DataLoader
+from typing import Dict, Any, Optional
 
 from .modeling.module_maps import MODEL_SPECS
-from .modeling.builder import load_vlm_model
-from .modeling.adapter import apply_lora_to_model, get_trainable_param_stats, check_trainable
-from .modeling.matcher import match_lora_ranks
-from .data.datasets import load_dataset_for_task, get_smoke_dataset
-from .data.collator import VLMDataCollator
-from .training.trainer import VLMTrainer, set_seed
 from .utils.manifest import ManifestManager, DEFAULT_MODELS, TASKS, PLACEMENTS, SEEDS
 
 
 def cmd_match_ranks(args: argparse.Namespace) -> None:
     """Pre-calculates matched vision ranks for a model or all models."""
+    from .modeling.builder import load_vlm_model
+    from .modeling.matcher import match_lora_ranks
+
     models_to_check = list(MODEL_SPECS.keys()) if args.model == "all" else [args.model]
 
     print("=" * 80)
@@ -49,6 +44,14 @@ def cmd_match_ranks(args: argparse.Namespace) -> None:
 
 def cmd_smoke(args: argparse.Namespace) -> None:
     """Runs a 100-sample smoke run for both placements (Week 6 deliverable)."""
+    from torch.utils.data import DataLoader
+    from .modeling.builder import load_vlm_model
+    from .modeling.adapter import apply_lora_to_model, get_trainable_param_stats
+    from .modeling.matcher import match_lora_ranks
+    from .data.datasets import get_smoke_dataset
+    from .data.collator import VLMDataCollator
+    from .training.trainer import VLMTrainer, set_seed
+
     print("=" * 80)
     print(" Running Week 6 Milestone Smoke Test (100 InfographicVQA samples, 1 seed)")
     print("=" * 80)
@@ -102,6 +105,14 @@ def cmd_smoke(args: argparse.Namespace) -> None:
 
 def cmd_train(args: argparse.Namespace) -> None:
     """Executes a single training run from the grid."""
+    from torch.utils.data import DataLoader
+    from .modeling.builder import load_vlm_model
+    from .modeling.adapter import apply_lora_to_model, get_trainable_param_stats
+    from .modeling.matcher import match_lora_ranks
+    from .data.datasets import load_dataset_for_task
+    from .data.collator import VLMDataCollator
+    from .training.trainer import VLMTrainer, set_seed
+
     print("=" * 80)
     print(f" Launching Run: Model={args.model} | Task={args.task} | Placement={args.placement} | Seed={args.seed}")
     print("=" * 80)
