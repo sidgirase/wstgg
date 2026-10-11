@@ -177,14 +177,20 @@ class VLMTrainer:
                         if hasattr(self.model, "forward_multimodal"):
                             outputs = self.model.forward_multimodal(input_ids, pixel_values, labels=labels)
                         else:
-                            outputs = self.model(input_ids=input_ids, labels=labels)
+                            try:
+                                outputs = self.model(input_ids=input_ids, pixel_values=pixel_values, labels=labels)
+                            except Exception:
+                                outputs = self.model(input_ids=input_ids, labels=labels)
                         loss = self.compute_loss(outputs, labels) / self.gradient_accumulation_steps
                     self.scaler.scale(loss).backward()
                 else:
                     if hasattr(self.model, "forward_multimodal"):
                         outputs = self.model.forward_multimodal(input_ids, pixel_values, labels=labels)
                     else:
-                        outputs = self.model(input_ids=input_ids, labels=labels)
+                        try:
+                            outputs = self.model(input_ids=input_ids, pixel_values=pixel_values, labels=labels)
+                        except Exception:
+                            outputs = self.model(input_ids=input_ids, labels=labels)
                     loss = self.compute_loss(outputs, labels) / self.gradient_accumulation_steps
                     loss.backward()
 

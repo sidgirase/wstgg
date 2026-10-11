@@ -178,15 +178,41 @@ def load_vlm_model(
 
     # Try loading HuggingFace model
     try:
-        from transformers import AutoModel, AutoModelForCausalLM
+        import transformers
         hf_id = spec["hf_model_id"]
         print(f"[ModelLoader] Loading pretrained {hf_id} from Hugging Face...")
-        model = AutoModel.from_pretrained(
-            hf_id,
-            torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
-            trust_remote_code=True,
-        )
+
+        auto_classes = []
+        pref_name = spec.get("auto_model_class")
+        if pref_name and hasattr(transformers, pref_name):
+            auto_classes.append(getattr(transformers, pref_name))
+
+        for cls_name in ["AutoModelForImageTextToText", "AutoModelForVision2Seq", "AutoModelForCausalLM", "AutoModel"]:
+            if hasattr(transformers, cls_name):
+                cls = getattr(transformers, cls_name)
+                if cls not in auto_classes:
+                    auto_classes.append(cls)
+
+        model = None
+        load_errors = []
+        for auto_cls in auto_classes:
+            try:
+                model = auto_cls.from_pretrained(
+                    hf_id,
+                    torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
+                    trust_remote_code=True,
+                )
+                print(f"[ModelLoader] Successfully loaded {hf_id} using {auto_cls.__name__}")
+                break
+            except Exception as e:
+                load_errors.append(f"{auto_cls.__name__}: {e}")
+                continue
+
+        if model is None:
+            raise RuntimeError(f"Failed to load {hf_id} with any AutoModel class: {'; '.join(load_errors)}")
+
         return model
     except Exception as e:
         print(f"[ModelLoader] Hugging Face loading failed ({e}). Falling back to mock architecture for '{family}'.")
         return load_vlm_model(model_name, use_mock=True, device=device)
+

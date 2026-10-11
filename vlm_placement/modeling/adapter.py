@@ -233,7 +233,10 @@ def apply_lora_to_model(
             lora_alpha=lora_alpha,
             lora_dropout=lora_dropout,
         )
-        setattr(parent, child_name, lora_layer)
+        if isinstance(parent, (nn.ModuleList, nn.Sequential)) and child_name.isdigit():
+            parent[int(child_name)] = lora_layer
+        else:
+            setattr(parent, child_name, lora_layer)
         adapted_count += 1
 
     if adapted_count == 0:

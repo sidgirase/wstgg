@@ -11,6 +11,7 @@ MODEL_SPECS: Dict[str, Dict[str, Any]] = {
     "internvl3_2b": {
         "hf_model_id": "OpenGVLab/InternVL2_5-2B",  # or OpenGVLab/InternVL3-2B
         "family": "internvl3",
+        "auto_model_class": "AutoModel",
         "vision_module_prefixes": [
             "vision_model",
             "mlp1",
@@ -45,15 +46,20 @@ MODEL_SPECS: Dict[str, Dict[str, Any]] = {
     "smolvlm2_2b": {
         "hf_model_id": "HuggingFaceTB/SmolVLM2-2.2B-Instruct",
         "family": "smolvlm2",
+        "auto_model_class": "AutoModelForImageTextToText",
         "vision_module_prefixes": [
-            "model.vision_model",
-            "model.connector",
+            "vision_model",
+            "connector",
+            "modality_projection",
+            "multi_modal_projector",
         ],
         "vision_connector_prefixes": [
-            "model.connector",
+            "connector",
+            "modality_projection",
+            "multi_modal_projector",
         ],
         "lm_module_prefixes": [
-            "model.text_model",
+            "text_model",
         ],
         "vision_target_modules": [
             "q_proj",
@@ -63,6 +69,8 @@ MODEL_SPECS: Dict[str, Dict[str, Any]] = {
             "fc1",
             "fc2",
             "connector",
+            "modality_projection",
+            "multi_modal_projector",
         ],
         "lm_target_modules": [
             "q_proj",
