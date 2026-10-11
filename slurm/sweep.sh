@@ -55,11 +55,17 @@ for r in runs:
     env['SEED'] = seed
     env['RUN_ID'] = run_id
 
+    export_vars = f"ALL,MODEL={model},TASK={task},PLACEMENT={placement},SEED={seed},RUN_ID={run_id}"
     cmd = [
         'sbatch',
         f'--job-name={run_id}',
-        'slurm/point.sbatch'
+        f'--export={export_vars}',
     ]
+    if os.environ.get('PACE_ACCOUNT'):
+        cmd.append(f"--account={os.environ['PACE_ACCOUNT']}")
+    if os.environ.get('PACE_QOS'):
+        cmd.append(f"--qos={os.environ['PACE_QOS']}")
+    cmd.append('slurm/point.sbatch')
 
     print(f'Submitting: {run_id} (Assigned to: {r[\"assigned_to\"]})...')
     try:

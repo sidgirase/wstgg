@@ -258,8 +258,17 @@ python scripts/manifest_tool.py status
    * *Fix 1*: Gradient checkpointing is enabled by default. Ensure it is not disabled.
    * *Fix 2*: Reduce batch size and increase gradient accumulation steps (e.g. `--batch_size 2 --gradient_accumulation_steps 8`).
    * *Fix 3*: Use the fallback flag `--last_k_vision_blocks 4` to adapt only the connector and top visual blocks.
-4. **SLURM Account or Partition Errors**:
-   * If `#SBATCH --account=pace-ice` fails on your PACE allocation, edit `slurm/point.sbatch` and replace with your class account (e.g. `--account=gts-zkira3`).
+4. **SLURM Lua Error (`job_submit.lua:12: bad argument #3 to 'newindex' (string expected, got nil)`):**
+   * *Cause*: On PACE-ICE, specifying `--account=pace-ice` causes the cluster's Slurm Lua hook to look up a non-existent account, resulting in `nil` being assigned to the job partition/QOS and crashing the submission.
+   * *Fix*: On PACE-ICE, jobs do not need `--account=pace-ice`. The Slurm scheduler automatically maps your submission to your default instructional account. If your course allocation requires a specific account or QOS, inspect it with:
+     ```bash
+     sacctmgr show user $USER format=User,Account,DefaultAccount,DefaultQOS -P
+     ```
+     and provide it via environment variables before running sweeps:
+     ```bash
+     export PACE_ACCOUNT=<your_course_account>
+     export PACE_QOS=<your_qos>   # if applicable
+     ```
 5. **`[Errno 122] Disk quota exceeded` on PACE**:
    * *Cause*: PACE user home directory (`/home/hice1/<username>`) has a strict ~10GB quota limit. PyTorch wheels and package caches easily exhaust this limit.
    * *Fix*:

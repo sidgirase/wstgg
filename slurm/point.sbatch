@@ -1,6 +1,5 @@
 #!/bin/bash
 #SBATCH --job-name=vlm_point
-#SBATCH --account=pace-ice
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
 #SBATCH --time=04:00:00
