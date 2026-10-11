@@ -168,7 +168,11 @@ class VLMTrainer:
 
                 # Context-aware mixed precision
                 if self.use_amp:
-                    with torch.cuda.amp.autocast(dtype=self.amp_dtype):
+                    if hasattr(torch, "amp") and hasattr(torch.amp, "autocast"):
+                        amp_ctx = torch.amp.autocast("cuda", dtype=self.amp_dtype)
+                    else:
+                        amp_ctx = torch.cuda.amp.autocast(dtype=self.amp_dtype)
+                    with amp_ctx:
                         # Forward pass
                         if hasattr(self.model, "forward_multimodal"):
                             outputs = self.model.forward_multimodal(input_ids, pixel_values, labels=labels)
