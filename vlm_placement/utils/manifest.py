@@ -109,11 +109,31 @@ class ManifestManager:
                 return r
         return None
 
+    def get_active_slurm_jobs(self) -> set:
+        """Returns the set of active SLURM job names for the current user."""
+        active = set()
+        user = os.environ.get("USER", "")
+        if not user:
+            return active
+        try:
+            import subprocess
+            res = subprocess.run(
+                ["squeue", "-u", user, "-h", "-o", "%j"],
+                capture_output=True,
+                text=True,
+                timeout=3,
+            )
+            for line in res.stdout.strip().splitlines():
+                if line.strip():
+                    active.add(line.strip())
+        except Exception:
+            pass
+        return active
+
     def sync_from_disk(self, runs_dir: str = "./runs") -> None:
         """
-        Scans runs_dir for completed run_metrics.json files and synchronizes
-        the manifest state. This ensures robust progress tracking across
-        parallel SLURM jobs without race condition clobbering.
+        Scans runs_dir for completed run_metrics.json files and checks
+        active SLURM jobs to synchronize the manifest state in real time.
         """
         if not os.path.exists(runs_dir):
             return
@@ -123,6 +143,7 @@ class ManifestManager:
             except Exception:
                 pass
 
+        active_slurm = self.get_active_slurm_jobs()
         updated = False
         for r in self.runs:
             run_id = r["run_id"]
@@ -139,6 +160,14 @@ class ManifestManager:
                         updated = True
                 except Exception:
                     pass
+            elif r["status"] != "completed":
+                if run_id in active_slurm:
+                    if r["status"] != "running":
+                        r["status"] = "running"
+                        updated = True
+                elif r["status"] == "running":
+                    r["status"] = "pending"
+                    updated = True
 
         if updated:
             self.save()
