@@ -30,7 +30,9 @@ ENV/
 checkpoints/
 runs/
 logs/
-data/
+/data/
+data_cache/
+!vlm_placement/data/
 *.pt
 *.bin
 *.safetensors
