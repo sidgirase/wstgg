@@ -7,6 +7,9 @@
 
 set -e
 
+mkdir -p logs
+mkdir -p runs
+
 MANIFEST_PATH="./runs/manifest.json"
 FILTER_ASSIGNEE=${1:-""}
 FILTER_MODEL=${2:-""}
@@ -22,7 +25,7 @@ echo "Submitting jobs to SLURM queue on PACE-ICE..."
 
 # Read pending runs and submit each as an independent SLURM job
 python -c "
-import json, subprocess, os
+import json, subprocess, os, sys
 
 with open('$MANIFEST_PATH', 'r') as f:
     runs = json.load(f)
@@ -43,20 +46,29 @@ for r in runs:
     model = r['model']
     task = r['task']
     placement = r['placement']
-    seed = r['seed']
+    seed = str(r['seed'])
+
+    env = dict(os.environ)
+    env['MODEL'] = model
+    env['TASK'] = task
+    env['PLACEMENT'] = placement
+    env['SEED'] = seed
+    env['RUN_ID'] = run_id
 
     cmd = [
         'sbatch',
         f'--job-name={run_id}',
-        f'--export=ALL,MODEL={model},TASK={task},PLACEMENT={placement},SEED={seed},RUN_ID={run_id}',
         'slurm/point.sbatch'
     ]
 
     print(f'Submitting: {run_id} (Assigned to: {r[\"assigned_to\"]})...')
     try:
-        res = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        res = subprocess.run(cmd, env=env, check=True, capture_output=True, text=True)
         print(f'  -> {res.stdout.strip()}')
         submitted += 1
+    except subprocess.CalledProcessError as e:
+        err_msg = e.stderr.strip() if e.stderr else (e.stdout.strip() if e.stdout else str(e))
+        print(f'  -> Failed to submit: {err_msg}')
     except Exception as e:
         print(f'  -> Failed to submit: {e}')
 
