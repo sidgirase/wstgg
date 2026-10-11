@@ -22,7 +22,11 @@ module load anaconda3/2023.03
 module load cuda/11.8
 
 echo "Activating Conda Environment..."
-source activate vlm_placement_env || conda activate vlm_placement_env
+if [ -d "$HOME/scratch/vlm_placement_env" ]; then
+    source activate "$HOME/scratch/vlm_placement_env" || conda activate "$HOME/scratch/vlm_placement_env"
+else
+    source activate vlm_placement_env || conda activate vlm_placement_env
+fi
 
 echo "Profiling Model Ranks..."
 python scripts/match_ranks.py --model all

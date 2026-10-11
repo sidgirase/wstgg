@@ -135,19 +135,19 @@ cd wstgg
 bash scripts/setup_pace_env.sh
 ```
 
-#### Manual PACE Setup (Alternative):
+#### Manual PACE Setup (in scratch):
 If you prefer running commands manually step-by-step:
 ```bash
 module load anaconda3/2023.03
 module load cuda/11.8
 
-# Create environment
-conda create -y -n vlm_placement_env python=3.10
-source activate vlm_placement_env
+# Create environment directly in ~/scratch to avoid home quota
+conda create -y -p ~/scratch/vlm_placement_env python=3.10
+source activate ~/scratch/vlm_placement_env
 
-# Install PyTorch with CUDA 11.8 and requirements
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
-pip install -r requirements.txt
+# Install PyTorch with CUDA 11.8 without caching to home
+pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu118
+pip install --no-cache-dir -r requirements.txt
 ```
 
 ---
@@ -260,6 +260,16 @@ python scripts/manifest_tool.py status
    * *Fix 3*: Use the fallback flag `--last_k_vision_blocks 4` to adapt only the connector and top visual blocks.
 4. **SLURM Account or Partition Errors**:
    * If `#SBATCH --account=pace-ice` fails on your PACE allocation, edit `slurm/point.sbatch` and replace with your class account (e.g. `--account=gts-zkira3`).
+5. **`[Errno 122] Disk quota exceeded` on PACE**:
+   * *Cause*: PACE user home directory (`/home/hice1/<username>`) has a strict ~10GB quota limit. PyTorch wheels and package caches easily exhaust this limit.
+   * *Fix*:
+     1. Free up your home directory:
+        ```bash
+        conda clean --all -y
+        rm -rf ~/.cache/pip
+        rm -rf ~/.conda/envs/vlm_placement_env
+        ```
+     2. Run `bash scripts/setup_pace_env.sh`, which installs the environment and caches directly into `~/scratch` (where storage quota is virtually unlimited).
 
 ---
 
