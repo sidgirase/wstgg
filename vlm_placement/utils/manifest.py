@@ -130,11 +130,14 @@ class ManifestManager:
             pass
         return active
 
-    def sync_from_disk(self, runs_dir: str = "./runs") -> None:
+    def sync_from_disk(self, runs_dir: Optional[str] = None) -> None:
         """
         Scans runs_dir for completed run_metrics.json files and checks
         active SLURM jobs to synchronize the manifest state in real time.
         """
+        if runs_dir is None:
+            # Keep custom manifests isolated from unrelated runs in the caller's CWD.
+            runs_dir = os.path.dirname(os.path.abspath(self.manifest_path))
         if not os.path.exists(runs_dir):
             return
         if os.path.exists(self.manifest_path):
