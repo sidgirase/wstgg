@@ -197,11 +197,22 @@ def load_vlm_model(
         load_errors = []
         for auto_cls in auto_classes:
             try:
-                model = auto_cls.from_pretrained(
-                    hf_id,
-                    torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
-                    trust_remote_code=True,
-                )
+                # 1. Try loading strictly from local disk cache first (zero network calls, no rate limits)
+                try:
+                    model = auto_cls.from_pretrained(
+                        hf_id,
+                        torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
+                        trust_remote_code=True,
+                        local_files_only=True,
+                    )
+                except Exception:
+                    # 2. If not cached locally yet, download once from Hugging Face Hub
+                    model = auto_cls.from_pretrained(
+                        hf_id,
+                        torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
+                        trust_remote_code=True,
+                        local_files_only=False,
+                    )
                 print(f"[ModelLoader] Successfully loaded {hf_id} using {auto_cls.__name__}")
                 break
             except Exception as e:
