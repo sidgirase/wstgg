@@ -162,6 +162,21 @@ def load_dataset_for_task(
                     task=task,
                 ))
             hf_loaded = True
+        elif task == "docvqa":
+            # Official lmms-lab/DocVQA with DocVQA config (held-out OOD evaluation)
+            ds = load_dataset("lmms-lab/DocVQA", "DocVQA", split=split)
+            for i, row in enumerate(ds):
+                if max_samples and i >= max_samples:
+                    break
+                items.append(VLMItem(
+                    item_id=str(row.get("questionId", f"docvqa_{i}")),
+                    image=row["image"],
+                    question=row["question"],
+                    answer=row["answers"][0] if isinstance(row["answers"], list) else str(row["answers"]),
+                    task=task,
+                    oracle_text=row.get("ocr", None),
+                ))
+            hf_loaded = True
     except Exception:
         hf_loaded = False
 
